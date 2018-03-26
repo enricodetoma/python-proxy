@@ -143,7 +143,8 @@ class HTTP(BaseProtocol):
             for path, text in httpget.items():
                 if url.path == path:
                     authtable.set_authed()
-                    text = (text % dict(host=headers["Host"])).encode()
+                    if type(text) is str:
+                        text = (text % dict(host=headers["Host"])).encode()
                     writer.write('{} 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nCache-Control: max-age=900\r\nContent-Length: {}\r\n\r\n'.format(ver, len(text)).encode() + text)
                     return None, None, None
             raise Exception('404 {} {}'.format(method, path))

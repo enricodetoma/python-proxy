@@ -229,6 +229,10 @@ A more complex example:
 
 It listen on the unix domain socket /tmp/pproxy_socket, and use cipher name salsa20, cipher key "complex_cipher_key", and enable explicit OTA encryption for shadowsocks protocol. The traffic is tunneled to remote https proxy with simple authentication. If OTA mode is not specified, server will allow both non-OTA and OTA traffic. If specified OTA mode, server only allow OTA client to connect.
 
+To establish an ssl tunnel to a remote server on port 443 through an http proxy, specify -p option:
+
+    $ pproxy -i http+socks://:8080 -r http+ssl://aa.bb.cc.dd:443 -p http://proxy_address:8080
+    
 If you want to listen in SSL, you must specify ssl certificate and private key files by parameter "--ssl", there is an example:
 
     $ pproxy -i http+ssl://0.0.0.0:443 -i http://0.0.0.0:80 --ssl server.crt,server.key --pac /autopac
