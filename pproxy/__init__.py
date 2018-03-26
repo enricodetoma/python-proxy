@@ -112,7 +112,7 @@ def pattern_compile(filename):
         return re.compile('(:?'+''.join('|'.join(i.strip() for i in f if i.strip() and not i.startswith('#')))+')$').match
 
 @asyncio.coroutine
-def proxy_connect_coroutine(host, port, ssl, proxy_host, proxy_port, limit=2**16):
+def proxy_connect_coroutine(host, port, ssl, proxy_host, proxy_port, proxy_auth, limit=2**16):
     try:
         loop = asyncio.events.get_event_loop()
         reader = asyncio.StreamReader(limit=limit, loop=loop)
@@ -121,7 +121,12 @@ def proxy_connect_coroutine(host, port, ssl, proxy_host, proxy_port, limit=2**16
             lambda: protocol, proxy_host, proxy_port)
         try:
             writer = asyncio.StreamWriter(transport, protocol, reader, loop)
-            writer.write("CONNECT {0}:{1} HTTP/1.1\r\nHost: {0}:{1}\r\n\r\n".format(host, port).encode('latin1'))
+            if proxy_auth:
+                import base64
+                auth = "Authorization: Basic {0}\r\nProxy-Authorization: Basic {0}\r\n".format(base64.b64encode(proxy_auth.encode('latin1')).decode('latin1'))
+            else:
+                auth = ""
+            writer.write("CONNECT {0}:{1} HTTP/1.1\r\nHost: {0}:{1}\r\n{2}\r\n".format(host, port, auth).encode('latin1'))
             ret = yield from reader.readuntil(b"\r\n\r\n")
             if b'HTTP/1.1 200' not in ret:
                 raise RuntimeError("Invalid proxy response: " + ret.decode('latin1'))
@@ -180,7 +185,7 @@ def uri_compile_proxy(uri, proxy_uri):
             connect = functools.partial(asyncio.open_connection, host=host, port=port, ssl=sslclient)
         else:
             proxy_url = urllib.parse.urlparse(proxy_uri)
-            connect = functools.partial(proxy_connect_coroutine, host=host, port=port, ssl=sslclient, proxy_host=proxy_url.hostname, proxy_port=proxy_url.port)
+            connect = functools.partial(proxy_connect_coroutine, host=host, port=port, ssl=sslclient, proxy_host=proxy_url.hostname, proxy_port=proxy_url.port, proxy_auth=proxy_url.fragment)
         server = functools.partial(asyncio.start_server, host=host, port=port, ssl=sslserver)
     else:
         connect = functools.partial(asyncio.open_unix_connection, path=url.path, ssl=sslclient, server_hostname='' if sslclient else None)

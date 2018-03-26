@@ -231,7 +231,7 @@ It listen on the unix domain socket /tmp/pproxy_socket, and use cipher name sals
 
 To establish an ssl tunnel to a remote server on port 443 through an http proxy, specify -p option:
 
-    $ pproxy -i http+socks://:8080 -r http+ssl://aa.bb.cc.dd:443 -p http://proxy_address:8080
+    $ pproxy -i http+socks://:8080 -r http+ssl://aa.bb.cc.dd:443 -p http://proxy_address:8080#username:password
     
 If you want to listen in SSL, you must specify ssl certificate and private key files by parameter "--ssl", there is an example:
 
